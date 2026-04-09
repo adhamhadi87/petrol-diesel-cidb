@@ -3,27 +3,16 @@ import pandas as pd
 import plotly.express as px
 from pathlib import Path
 
-st.set_page_config(
-    page_title="Penggunaan Petrol & Diesel CIDB",
-    layout="wide",
-    page_icon="⛽",
-    initial_sidebar_state="expanded"
-)
+st.set_page_config(page_title="Penggunaan Petrol & Diesel CIDB", layout="wide", page_icon="⛽")
 
-# CSS untuk menjadikan content sentiasa di tengah
+# CSS dengan saiz font normal dan sidebar padat
 st.markdown("""
     <style>
     .stApp { background-color: #f5f7fb; }
-    /* Pusatkan container utama */
-    .main .block-container {
-        max-width: 1200px;
-        margin: 0 auto;
-        padding: 2rem 1rem;
-    }
     h1 { font-size: 28px !important; color: #0a2b5e; text-align: center !important; }
     h2 { font-size: 20px !important; color: #1e466e; border-left: 4px solid #f4a261; padding-left: 15px; }
     
-    /* Sidebar styling */
+    /* Sidebar */
     [data-testid="stSidebar"] {
         background: linear-gradient(145deg, #0f2b4d, #1b3a6b);
         min-width: 260px !important;
@@ -70,6 +59,10 @@ st.markdown("""
         padding: 10px 15px;
     }
     
+    .stDataFrame { font-size: 13px !important; }
+    .stDataFrame table { font-size: 13px !important; }
+    .stDataFrame th { font-size: 14px !important; background-color: #e6f0fa !important; }
+    .stDataFrame td { font-size: 13px !important; }
     .stSubheader { font-size: 20px !important; font-weight: bold; }
     .stMarkdown p { font-size: 14px !important; }
     </style>
@@ -131,91 +124,32 @@ ptj_map = {
 }
 df['PTJ'] = df['Cost Center'].astype(str).map(ptj_map)
 
-# =========================================================
-# SLICER DI SIDEBAR DENGAN BUTANG SELECT ALL / CLEAR
-# =========================================================
+# Slicer di sidebar
 st.sidebar.markdown("<div class='filter-title'>🔎 SLICER</div>", unsafe_allow_html=True)
 
-# Tahun
-tahun_options = sorted(df['Tahun'].unique())
-if 'selected_tahun' not in st.session_state:
-    st.session_state.selected_tahun = tahun_options
-col_t1, col_t2 = st.sidebar.columns(2)
-with col_t1:
-    if st.button("Pilih Semua Tahun", use_container_width=True):
-        st.session_state.selected_tahun = tahun_options
-with col_t2:
-    if st.button("Kosongkan Tahun", use_container_width=True):
-        st.session_state.selected_tahun = []
-selected_tahun = st.sidebar.multiselect(
-    "📅 Tahun", options=tahun_options, default=st.session_state.selected_tahun
-)
-st.session_state.selected_tahun = selected_tahun
+all_tahun = sorted(df['Tahun'].unique())
+selected_tahun = st.sidebar.multiselect("📅 Tahun", options=all_tahun, default=all_tahun)
 
-# PTJ (bergantung pada tahun)
 temp_df = df[df['Tahun'].isin(selected_tahun)] if selected_tahun else df
-ptj_options = sorted(temp_df['PTJ'].dropna().unique())
-if 'selected_ptj' not in st.session_state:
-    st.session_state.selected_ptj = ptj_options
-col_p1, col_p2 = st.sidebar.columns(2)
-with col_p1:
-    if st.button("Pilih Semua PTJ", use_container_width=True):
-        st.session_state.selected_ptj = ptj_options
-with col_p2:
-    if st.button("Kosongkan PTJ", use_container_width=True):
-        st.session_state.selected_ptj = []
-selected_ptj = st.sidebar.multiselect(
-    "🏢 PTJ", options=ptj_options, default=st.session_state.selected_ptj
-)
-st.session_state.selected_ptj = selected_ptj
-
-# Bulan (bergantung pada PTJ)
+all_ptj = sorted(temp_df['PTJ'].dropna().unique())
+selected_ptj = st.sidebar.multiselect("🏢 PTJ", options=all_ptj, default=all_ptj)
 if selected_ptj:
-    temp_df2 = temp_df[temp_df['PTJ'].isin(selected_ptj)]
-else:
-    temp_df2 = temp_df
-bulan_available = [b for b in bulan_order if b in temp_df2['Bulan'].unique()]
-if 'selected_bulan' not in st.session_state:
-    st.session_state.selected_bulan = bulan_available
-col_b1, col_b2 = st.sidebar.columns(2)
-with col_b1:
-    if st.button("Pilih Semua Bulan", use_container_width=True):
-        st.session_state.selected_bulan = bulan_available
-with col_b2:
-    if st.button("Kosongkan Bulan", use_container_width=True):
-        st.session_state.selected_bulan = []
-selected_bulan = st.sidebar.multiselect(
-    "📆 Bulan", options=bulan_available, default=st.session_state.selected_bulan
-)
-st.session_state.selected_bulan = selected_bulan
+    temp_df = temp_df[temp_df['PTJ'].isin(selected_ptj)]
 
-# Quarter (bergantung pada bulan)
+all_bulan = [b for b in bulan_order if b in temp_df['Bulan'].unique()]
+selected_bulan = st.sidebar.multiselect("📆 Bulan", options=all_bulan, default=all_bulan)
 if selected_bulan:
-    temp_df3 = temp_df2[temp_df2['Bulan'].isin(selected_bulan)]
-else:
-    temp_df3 = temp_df2
-quarter_available = sorted(temp_df3['Quarter'].unique())
-if 'selected_quarter' not in st.session_state:
-    st.session_state.selected_quarter = quarter_available
-col_q1, col_q2 = st.sidebar.columns(2)
-with col_q1:
-    if st.button("Pilih Semua Quarter", use_container_width=True):
-        st.session_state.selected_quarter = quarter_available
-with col_q2:
-    if st.button("Kosongkan Quarter", use_container_width=True):
-        st.session_state.selected_quarter = []
-selected_quarter = st.sidebar.multiselect(
-    "🗓️ Quarter", options=quarter_available, default=st.session_state.selected_quarter
-)
-st.session_state.selected_quarter = selected_quarter
+    temp_df = temp_df[temp_df['Bulan'].isin(selected_bulan)]
 
-# Jenis
-jenis_options = ["Petrol", "Diesel"]
-selected_jenis = st.sidebar.multiselect(
-    "⛽ Jenis Bahan Api", options=jenis_options, default=jenis_options
-)
+all_quarter = sorted(temp_df['Quarter'].unique())
+selected_quarter = st.sidebar.multiselect("🗓️ Quarter", options=all_quarter, default=all_quarter)
+if selected_quarter:
+    temp_df = temp_df[temp_df['Quarter'].isin(selected_quarter)]
 
-# Gabungan penapisan
+all_jenis = ["Petrol", "Diesel"]
+selected_jenis = st.sidebar.multiselect("⛽ Jenis Bahan Api", options=all_jenis, default=all_jenis)
+
+# Gabungan penapisan untuk semua chart (berdasarkan slicer)
 df_filter = df.copy()
 if selected_tahun:
     df_filter = df_filter[df_filter['Tahun'].isin(selected_tahun)]
@@ -238,7 +172,9 @@ c1.metric("⛽ Petrol", f"RM {petrol:,.2f}")
 c2.metric("🚛 Diesel", f"RM {diesel:,.2f}")
 c3.metric("💰 Jumlah", f"RM {jumlah:,.2f}")
 
-# Chart tahunan (di atas)
+# =========================================================
+# CHART TAHUNAN (dinaikkan ke atas)
+# =========================================================
 st.subheader("📅 Analisa Penggunaan Mengikut Tahun")
 yearly = df_filter.groupby(['Tahun', 'Jenis'])['Amount in local currency'].sum().reset_index()
 if not yearly.empty:
@@ -248,7 +184,7 @@ if not yearly.empty:
     fig_year.update_traces(textposition='outside', textfont=dict(size=10))
     fig_year.update_layout(
         xaxis_title="Tahun", yaxis_title="RM",
-        plot_bgcolor='rgba(0,0,0,0)',
+        plot_bgcolor='rgba(0,0,0,0)',   # telus, ikut background base
         paper_bgcolor='rgba(0,0,0,0)',
         font=dict(size=12), height=300
     )
@@ -257,9 +193,12 @@ if not yearly.empty:
 else:
     st.info("Tiada data tahunan untuk dipaparkan.")
 
-# Analisis Penggunaan (pie dan bar bulanan)
+# =========================================================
+# ANALISIS PENGGUNAAN (turun ke bawah)
+# =========================================================
 st.subheader("📊 Analisis Penggunaan")
 colA, colB = st.columns(2)
+
 with colA:
     pie_data = df_filter.groupby('Jenis')['Amount in local currency'].sum().reset_index()
     if not pie_data.empty:
@@ -273,6 +212,7 @@ with colA:
             font=dict(size=12), height=300
         )
         st.plotly_chart(fig, use_container_width=True)
+
 with colB:
     monthly = df_filter.groupby(['Bulan','Jenis'])['Amount in local currency'].sum().reset_index()
     if not monthly.empty:
@@ -288,8 +228,12 @@ with colB:
         fig.update_yaxes(tickformat=",.2f")
         st.plotly_chart(fig, use_container_width=True)
 
-# Top 10 PTJ dan Trend PTJ vs Tahun
+# =========================================================
+# DUA CHART DIASINGKAN: Top 10 PTJ (atas) dan Trend PTJ vs Tahun (bawah)
+# =========================================================
 st.subheader("🏢 Penggunaan Mengikut PTJ (Top 10)")
+
+# Top 10 PTJ (horizontal bar chart)
 ptj_sum = df_filter.groupby('PTJ')['Amount in local currency'].sum().reset_index()
 ptj_sum = ptj_sum.sort_values('Amount in local currency', ascending=True).tail(10)
 if not ptj_sum.empty:
@@ -309,11 +253,14 @@ else:
     st.info("Tiada data PTJ.")
 
 st.subheader("📈 Trend PTJ vs Tahun (Top 10 PTJ berdasarkan jumlah penggunaan)")
+
 trend_tahunan = df_filter.groupby(['PTJ', 'Tahun'])['Amount in local currency'].sum().reset_index()
-if len(trend_tahunan['PTJ'].dropna().unique()) > 0:
+ptj_list = trend_tahunan['PTJ'].dropna().unique()
+if len(ptj_list) > 0:
     total_per_ptj = trend_tahunan.groupby('PTJ')['Amount in local currency'].sum().sort_values(ascending=False)
     top_ptj = total_per_ptj.head(10).index.tolist()
     trend_filtered = trend_tahunan[trend_tahunan['PTJ'].isin(top_ptj)]
+    
     fig_line = px.line(trend_filtered, x='Tahun', y='Amount in local currency', color='PTJ',
                        markers=True, labels={"Amount in local currency": "RM"})
     fig_line.update_traces(marker=dict(size=6))
