@@ -227,7 +227,7 @@ with colB:
 # =========================================================
 # SEMUA PTJ (bukan top 10) - bar chart dengan amount jelas
 # =========================================================
-st.subheader("🏢 Penggunaan Mengikut PTJ (Semua berdasarkan slicer)")
+st.subheader("🏢 Penggunaan Mengikut PTJ")
 
 ptj_sum = df_filter.groupby('PTJ')['Amount in local currency'].sum().reset_index()
 ptj_sum = ptj_sum.sort_values('Amount in local currency', ascending=True)
@@ -256,7 +256,7 @@ else:
 # =========================================================
 # SEMUA PTJ (trend line chart) - semua PTJ berdasarkan slicer
 # =========================================================
-st.subheader("📈 Trend PTJ vs Tahun (Semua PTJ berdasarkan slicer)")
+st.subheader("📈 Trend PTJ vs Tahun")
 
 trend_tahunan = df_filter.groupby(['PTJ', 'Tahun'])['Amount in local currency'].sum().reset_index()
 if not trend_tahunan.empty and len(trend_tahunan['PTJ'].dropna().unique()) > 0:
