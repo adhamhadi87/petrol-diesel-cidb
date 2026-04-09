@@ -172,7 +172,30 @@ c1.metric("⛽ Petrol", f"RM {petrol:,.2f}")
 c2.metric("🚛 Diesel", f"RM {diesel:,.2f}")
 c3.metric("💰 Jumlah", f"RM {jumlah:,.2f}")
 
-# Analisis Penggunaan - dua chart dalam satu baris dengan height kecil
+# =========================================================
+# CHART TAHUNAN (dinaikkan ke atas)
+# =========================================================
+st.subheader("📅 Analisa Penggunaan Mengikut Tahun")
+yearly = df_filter.groupby(['Tahun', 'Jenis'])['Amount in local currency'].sum().reset_index()
+if not yearly.empty:
+    fig_year = px.bar(yearly, x='Tahun', y='Amount in local currency', color='Jenis', barmode='group',
+                      color_discrete_map={"Petrol":"#2c7da0","Diesel":"#d98c2b"},
+                      text=yearly['Amount in local currency'].apply(lambda x: f'RM {x:,.2f}'))
+    fig_year.update_traces(textposition='outside', textfont=dict(size=10))
+    fig_year.update_layout(
+        xaxis_title="Tahun", yaxis_title="RM",
+        plot_bgcolor='rgba(0,0,0,0)',   # telus, ikut background base
+        paper_bgcolor='rgba(0,0,0,0)',
+        font=dict(size=12), height=300
+    )
+    fig_year.update_yaxes(tickformat=",.2f")
+    st.plotly_chart(fig_year, use_container_width=True)
+else:
+    st.info("Tiada data tahunan untuk dipaparkan.")
+
+# =========================================================
+# ANALISIS PENGGUNAAN (turun ke bawah)
+# =========================================================
 st.subheader("📊 Analisis Penggunaan")
 colA, colB = st.columns(2)
 
@@ -182,7 +205,12 @@ with colA:
         fig = px.pie(pie_data, names='Jenis', values='Amount in local currency', hole=0.35,
                      color='Jenis', color_discrete_map={"Petrol":"#2c7da0","Diesel":"#d98c2b"})
         fig.update_traces(textinfo='percent+label', textfont_size=12)
-        fig.update_layout(showlegend=False, margin=dict(t=10,b=10), font=dict(size=12), height=300)
+        fig.update_layout(
+            showlegend=False, margin=dict(t=10,b=10),
+            plot_bgcolor='rgba(0,0,0,0)',
+            paper_bgcolor='rgba(0,0,0,0)',
+            font=dict(size=12), height=300
+        )
         st.plotly_chart(fig, use_container_width=True)
 
 with colB:
@@ -191,32 +219,21 @@ with colB:
         fig = px.bar(monthly, x='Bulan', y='Amount in local currency', color='Jenis',
                      barmode='group', color_discrete_map={"Petrol":"#2c7da0","Diesel":"#d98c2b"},
                      category_orders={"Bulan":bulan_order})
-        fig.update_layout(xaxis_title="Bulan", yaxis_title="RM", plot_bgcolor='rgba(0,0,0,0)',
-                          font=dict(size=11), height=300)
+        fig.update_layout(
+            xaxis_title="Bulan", yaxis_title="RM",
+            plot_bgcolor='rgba(0,0,0,0)',
+            paper_bgcolor='rgba(0,0,0,0)',
+            font=dict(size=11), height=300
+        )
         fig.update_yaxes(tickformat=",.2f")
         st.plotly_chart(fig, use_container_width=True)
-
-# Chart tahunan
-st.subheader("📅 Analisa Penggunaan Mengikut Tahun")
-yearly = df_filter.groupby(['Tahun', 'Jenis'])['Amount in local currency'].sum().reset_index()
-if not yearly.empty:
-    fig_year = px.bar(yearly, x='Tahun', y='Amount in local currency', color='Jenis', barmode='group',
-                      color_discrete_map={"Petrol":"#2c7da0","Diesel":"#d98c2b"},
-                      text=yearly['Amount in local currency'].apply(lambda x: f'RM {x:,.2f}'))
-    fig_year.update_traces(textposition='outside', textfont=dict(size=10))
-    fig_year.update_layout(xaxis_title="Tahun", yaxis_title="RM", plot_bgcolor='rgba(0,0,0,0)',
-                           font=dict(size=12), height=300)
-    fig_year.update_yaxes(tickformat=",.2f")
-    st.plotly_chart(fig_year, use_container_width=True)
-else:
-    st.info("Tiada data tahunan untuk dipaparkan.")
 
 # =========================================================
 # DUA CHART DIASINGKAN: Top 10 PTJ (atas) dan Trend PTJ vs Tahun (bawah)
 # =========================================================
 st.subheader("🏢 Penggunaan Mengikut PTJ (Top 10)")
 
-# Top 10 PTJ (horizontal bar chart) - atas
+# Top 10 PTJ (horizontal bar chart)
 ptj_sum = df_filter.groupby('PTJ')['Amount in local currency'].sum().reset_index()
 ptj_sum = ptj_sum.sort_values('Amount in local currency', ascending=True).tail(10)
 if not ptj_sum.empty:
@@ -224,14 +241,17 @@ if not ptj_sum.empty:
                      text='Amount in local currency',
                      color='Amount in local currency', color_continuous_scale='Blues')
     fig_bar.update_traces(texttemplate='RM %{x:,.2f}', textposition='outside', textfont=dict(size=10))
-    fig_bar.update_layout(xaxis_title="RM", yaxis_title="", coloraxis_showscale=False,
-                          height=350, font=dict(size=11))
+    fig_bar.update_layout(
+        xaxis_title="RM", yaxis_title="", coloraxis_showscale=False,
+        plot_bgcolor='rgba(0,0,0,0)',
+        paper_bgcolor='rgba(0,0,0,0)',
+        height=350, font=dict(size=11)
+    )
     fig_bar.update_xaxes(tickformat=",.2f")
     st.plotly_chart(fig_bar, use_container_width=True)
 else:
     st.info("Tiada data PTJ.")
 
-# Trend PTJ vs Tahun - bawah
 st.subheader("📈 Trend PTJ vs Tahun (Top 10 PTJ berdasarkan jumlah penggunaan)")
 
 trend_tahunan = df_filter.groupby(['PTJ', 'Tahun'])['Amount in local currency'].sum().reset_index()
@@ -244,8 +264,12 @@ if len(ptj_list) > 0:
     fig_line = px.line(trend_filtered, x='Tahun', y='Amount in local currency', color='PTJ',
                        markers=True, labels={"Amount in local currency": "RM"})
     fig_line.update_traces(marker=dict(size=6))
-    fig_line.update_layout(xaxis_title="Tahun", yaxis_title="RM", font=dict(size=11),
-                           height=400, legend=dict(font=dict(size=9)))
+    fig_line.update_layout(
+        xaxis_title="Tahun", yaxis_title="RM",
+        plot_bgcolor='rgba(0,0,0,0)',
+        paper_bgcolor='rgba(0,0,0,0)',
+        font=dict(size=11), height=400, legend=dict(font=dict(size=9))
+    )
     fig_line.update_yaxes(tickformat=",.2f")
     fig_line.update_xaxes(type='category')
     st.plotly_chart(fig_line, use_container_width=True)
