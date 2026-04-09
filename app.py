@@ -211,44 +211,43 @@ if not yearly.empty:
 else:
     st.info("Tiada data tahunan untuk dipaparkan.")
 
-# Dua chart sebaris: Top 10 PTJ dan Trend PTJ vs Tahun (tanpa filter tambahan)
-st.subheader("🏢 Penggunaan Mengikut PTJ (Top 10) & 📈 Trend PTJ vs Tahun")
+# =========================================================
+# DUA CHART DIASINGKAN: Top 10 PTJ (atas) dan Trend PTJ vs Tahun (bawah)
+# =========================================================
+st.subheader("🏢 Penggunaan Mengikut PTJ (Top 10)")
 
-col1, col2 = st.columns(2)
+# Top 10 PTJ (horizontal bar chart) - atas
+ptj_sum = df_filter.groupby('PTJ')['Amount in local currency'].sum().reset_index()
+ptj_sum = ptj_sum.sort_values('Amount in local currency', ascending=True).tail(10)
+if not ptj_sum.empty:
+    fig_bar = px.bar(ptj_sum, y='PTJ', x='Amount in local currency', orientation='h',
+                     text='Amount in local currency',
+                     color='Amount in local currency', color_continuous_scale='Blues')
+    fig_bar.update_traces(texttemplate='RM %{x:,.2f}', textposition='outside', textfont=dict(size=10))
+    fig_bar.update_layout(xaxis_title="RM", yaxis_title="", coloraxis_showscale=False,
+                          height=350, font=dict(size=11))
+    fig_bar.update_xaxes(tickformat=",.2f")
+    st.plotly_chart(fig_bar, use_container_width=True)
+else:
+    st.info("Tiada data PTJ.")
 
-with col1:
-    # Top 10 PTJ (horizontal bar chart)
-    ptj_sum = df_filter.groupby('PTJ')['Amount in local currency'].sum().reset_index()
-    ptj_sum = ptj_sum.sort_values('Amount in local currency', ascending=True).tail(10)  # Top 10
-    if not ptj_sum.empty:
-        fig_bar = px.bar(ptj_sum, y='PTJ', x='Amount in local currency', orientation='h',
-                         text='Amount in local currency',
-                         color='Amount in local currency', color_continuous_scale='Blues')
-        fig_bar.update_traces(texttemplate='RM %{x:,.2f}', textposition='outside', textfont=dict(size=10))
-        fig_bar.update_layout(xaxis_title="RM", yaxis_title="", coloraxis_showscale=False,
-                              height=350, font=dict(size=11))
-        fig_bar.update_xaxes(tickformat=",.2f")
-        st.plotly_chart(fig_bar, use_container_width=True)
-    else:
-        st.info("Tiada data PTJ.")
+# Trend PTJ vs Tahun - bawah
+st.subheader("📈 Trend PTJ vs Tahun (Top 10 PTJ berdasarkan jumlah penggunaan)")
 
-with col2:
-    # Trend PTJ vs Tahun - plot semua PTJ dalam data (selepas slicer)
-    trend_tahunan = df_filter.groupby(['PTJ', 'Tahun'])['Amount in local currency'].sum().reset_index()
-    ptj_list = trend_tahunan['PTJ'].dropna().unique()
-    if len(ptj_list) > 0:
-        # Limit kepada 10 PTJ teratas untuk kebolehbacaan (atau semua jika kurang)
-        total_per_ptj = trend_tahunan.groupby('PTJ')['Amount in local currency'].sum().sort_values(ascending=False)
-        top_ptj = total_per_ptj.head(10).index.tolist()
-        trend_filtered = trend_tahunan[trend_tahunan['PTJ'].isin(top_ptj)]
-        
-        fig_line = px.line(trend_filtered, x='Tahun', y='Amount in local currency', color='PTJ',
-                           markers=True, labels={"Amount in local currency": "RM"})
-        fig_line.update_traces(marker=dict(size=6))
-        fig_line.update_layout(xaxis_title="Tahun", yaxis_title="RM", font=dict(size=11),
-                               height=350, legend=dict(font=dict(size=9)))
-        fig_line.update_yaxes(tickformat=",.2f")
-        fig_line.update_xaxes(type='category')
-        st.plotly_chart(fig_line, use_container_width=True)
-    else:
-        st.info("Tiada data PTJ untuk trend.")
+trend_tahunan = df_filter.groupby(['PTJ', 'Tahun'])['Amount in local currency'].sum().reset_index()
+ptj_list = trend_tahunan['PTJ'].dropna().unique()
+if len(ptj_list) > 0:
+    total_per_ptj = trend_tahunan.groupby('PTJ')['Amount in local currency'].sum().sort_values(ascending=False)
+    top_ptj = total_per_ptj.head(10).index.tolist()
+    trend_filtered = trend_tahunan[trend_tahunan['PTJ'].isin(top_ptj)]
+    
+    fig_line = px.line(trend_filtered, x='Tahun', y='Amount in local currency', color='PTJ',
+                       markers=True, labels={"Amount in local currency": "RM"})
+    fig_line.update_traces(marker=dict(size=6))
+    fig_line.update_layout(xaxis_title="Tahun", yaxis_title="RM", font=dict(size=11),
+                           height=400, legend=dict(font=dict(size=9)))
+    fig_line.update_yaxes(tickformat=",.2f")
+    fig_line.update_xaxes(type='category')
+    st.plotly_chart(fig_line, use_container_width=True)
+else:
+    st.info("Tiada data PTJ untuk trend.")
