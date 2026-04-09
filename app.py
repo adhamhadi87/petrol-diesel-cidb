@@ -5,12 +5,12 @@ from pathlib import Path
 
 st.set_page_config(page_title="Penggunaan Petrol & Diesel CIDB", layout="wide", page_icon="⛽")
 
-# CSS dengan saiz font normal
+# CSS dengan saiz font normal dan sidebar padat
 st.markdown("""
     <style>
     .stApp { background-color: #f5f7fb; }
     h1 { font-size: 28px !important; color: #0a2b5e; text-align: center !important; }
-    h2 { font-size: 22px !important; color: #1e466e; border-left: 4px solid #f4a261; padding-left: 15px; }
+    h2 { font-size: 20px !important; color: #1e466e; border-left: 4px solid #f4a261; padding-left: 15px; }
     
     /* Sidebar */
     [data-testid="stSidebar"] {
@@ -43,12 +43,12 @@ st.markdown("""
     
     /* KPI */
     div[data-testid="stMetricLabel"] {
-        font-size: 15px !important;
+        font-size: 14px !important;
         font-weight: 600 !important;
         margin-bottom: 5px !important;
     }
     div[data-testid="stMetricValue"] {
-        font-size: 26px !important;
+        font-size: 24px !important;
         font-weight: 700 !important;
         color: #0a2b5e !important;
     }
@@ -56,7 +56,7 @@ st.markdown("""
         background: white;
         border-radius: 12px;
         border-left: 4px solid #f4a261;
-        padding: 12px 15px;
+        padding: 10px 15px;
     }
     
     .stDataFrame { font-size: 13px !important; }
@@ -72,7 +72,7 @@ st.markdown("""
 if Path("cidb_logo.png").exists():
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
-        st.image("cidb_logo.png", width=100)
+        st.image("cidb_logo.png", width=80)
 
 st.markdown("<h1 style='text-align: center;'>⛽ Penggunaan Petrol & Diesel (CIDB Malaysia)</h1>", unsafe_allow_html=True)
 
@@ -83,7 +83,7 @@ def load_data():
     if not DATA_FOLDER.exists():
         st.error("Folder 'data' tidak dijumpai")
         st.stop()
-    files = list(DATA_FOLDER.glob("*.[xX][lL][sS]*"))  # terima .xlsx, .XLSX, .xls
+    files = list(DATA_FOLDER.glob("*.[xX][lL][sS]*"))
     if not files:
         st.warning("Tiada fail Excel")
         return pd.DataFrame()
@@ -124,7 +124,7 @@ ptj_map = {
 }
 df['PTJ'] = df['Cost Center'].astype(str).map(ptj_map)
 
-# Slicer dinamik di sidebar
+# Slicer di sidebar
 st.sidebar.markdown("<div class='filter-title'>🔎 SLICER</div>", unsafe_allow_html=True)
 
 all_tahun = sorted(df['Tahun'].unique())
@@ -149,7 +149,7 @@ if selected_quarter:
 all_jenis = ["Petrol", "Diesel"]
 selected_jenis = st.sidebar.multiselect("⛽ Jenis Bahan Api", options=all_jenis, default=all_jenis)
 
-# Gabungan penapisan
+# Gabungan penapisan untuk semua chart (berdasarkan slicer)
 df_filter = df.copy()
 if selected_tahun:
     df_filter = df_filter[df_filter['Tahun'].isin(selected_tahun)]
@@ -172,21 +172,27 @@ c1.metric("⛽ Petrol", f"RM {petrol:,.2f}")
 c2.metric("🚛 Diesel", f"RM {diesel:,.2f}")
 c3.metric("💰 Jumlah", f"RM {jumlah:,.2f}")
 
-# Analisis Penggunaan
+# Analisis Penggunaan - dua chart dalam satu baris dengan height kecil
 st.subheader("📊 Analisis Penggunaan")
 colA, colB = st.columns(2)
+
 with colA:
     pie_data = df_filter.groupby('Jenis')['Amount in local currency'].sum().reset_index()
     if not pie_data.empty:
-        fig = px.pie(pie_data, names='Jenis', values='Amount in local currency', hole=0.35, color='Jenis', color_discrete_map={"Petrol":"#2c7da0","Diesel":"#d98c2b"})
-        fig.update_traces(textinfo='percent+label', textfont_size=14)
-        fig.update_layout(showlegend=False, margin=dict(t=10,b=10), font=dict(size=14))
+        fig = px.pie(pie_data, names='Jenis', values='Amount in local currency', hole=0.35,
+                     color='Jenis', color_discrete_map={"Petrol":"#2c7da0","Diesel":"#d98c2b"})
+        fig.update_traces(textinfo='percent+label', textfont_size=12)
+        fig.update_layout(showlegend=False, margin=dict(t=10,b=10), font=dict(size=12), height=300)
         st.plotly_chart(fig, use_container_width=True)
+
 with colB:
     monthly = df_filter.groupby(['Bulan','Jenis'])['Amount in local currency'].sum().reset_index()
     if not monthly.empty:
-        fig = px.bar(monthly, x='Bulan', y='Amount in local currency', color='Jenis', barmode='group', color_discrete_map={"Petrol":"#2c7da0","Diesel":"#d98c2b"}, category_orders={"Bulan":bulan_order})
-        fig.update_layout(xaxis_title="Bulan", yaxis_title="RM", plot_bgcolor='rgba(0,0,0,0)', font=dict(size=14))
+        fig = px.bar(monthly, x='Bulan', y='Amount in local currency', color='Jenis',
+                     barmode='group', color_discrete_map={"Petrol":"#2c7da0","Diesel":"#d98c2b"},
+                     category_orders={"Bulan":bulan_order})
+        fig.update_layout(xaxis_title="Bulan", yaxis_title="RM", plot_bgcolor='rgba(0,0,0,0)',
+                          font=dict(size=11), height=300)
         fig.update_yaxes(tickformat=",.2f")
         st.plotly_chart(fig, use_container_width=True)
 
@@ -197,47 +203,52 @@ if not yearly.empty:
     fig_year = px.bar(yearly, x='Tahun', y='Amount in local currency', color='Jenis', barmode='group',
                       color_discrete_map={"Petrol":"#2c7da0","Diesel":"#d98c2b"},
                       text=yearly['Amount in local currency'].apply(lambda x: f'RM {x:,.2f}'))
-    fig_year.update_traces(textposition='outside', textfont=dict(size=11))
-    fig_year.update_layout(xaxis_title="Tahun", yaxis_title="RM", plot_bgcolor='rgba(0,0,0,0)', font=dict(size=14), height=450)
+    fig_year.update_traces(textposition='outside', textfont=dict(size=10))
+    fig_year.update_layout(xaxis_title="Tahun", yaxis_title="RM", plot_bgcolor='rgba(0,0,0,0)',
+                           font=dict(size=12), height=300)
     fig_year.update_yaxes(tickformat=",.2f")
     st.plotly_chart(fig_year, use_container_width=True)
 else:
     st.info("Tiada data tahunan untuk dipaparkan.")
 
-# Dua chart: Top 15 PTJ dan trend PTJ
-st.subheader("🏢 Penggunaan Mengikut PTJ (Top 15) & 📈 Trend PTJ vs Tahun")
+# Dua chart sebaris: Top 10 PTJ dan Trend PTJ vs Tahun (tanpa filter tambahan)
+st.subheader("🏢 Penggunaan Mengikut PTJ (Top 10) & 📈 Trend PTJ vs Tahun")
 
 col1, col2 = st.columns(2)
 
 with col1:
-    ptj_sum = df_filter.groupby('PTJ')['Amount in local currency'].sum().reset_index().sort_values('Amount in local currency', ascending=True).tail(15)
+    # Top 10 PTJ (horizontal bar chart)
+    ptj_sum = df_filter.groupby('PTJ')['Amount in local currency'].sum().reset_index()
+    ptj_sum = ptj_sum.sort_values('Amount in local currency', ascending=True).tail(10)  # Top 10
     if not ptj_sum.empty:
-        fig_bar = px.bar(ptj_sum, y='PTJ', x='Amount in local currency', orientation='h', text='Amount in local currency',
+        fig_bar = px.bar(ptj_sum, y='PTJ', x='Amount in local currency', orientation='h',
+                         text='Amount in local currency',
                          color='Amount in local currency', color_continuous_scale='Blues')
-        fig_bar.update_traces(texttemplate='RM %{x:,.2f}', textposition='outside', textfont=dict(size=11))
-        fig_bar.update_layout(xaxis_title="RM", yaxis_title="", coloraxis_showscale=False, height=450, font=dict(size=13))
+        fig_bar.update_traces(texttemplate='RM %{x:,.2f}', textposition='outside', textfont=dict(size=10))
+        fig_bar.update_layout(xaxis_title="RM", yaxis_title="", coloraxis_showscale=False,
+                              height=350, font=dict(size=11))
         fig_bar.update_xaxes(tickformat=",.2f")
         st.plotly_chart(fig_bar, use_container_width=True)
     else:
         st.info("Tiada data PTJ.")
 
 with col2:
+    # Trend PTJ vs Tahun - plot semua PTJ dalam data (selepas slicer)
     trend_tahunan = df_filter.groupby(['PTJ', 'Tahun'])['Amount in local currency'].sum().reset_index()
-    ptj_list_tahunan = sorted(trend_tahunan['PTJ'].dropna().unique())
-    if ptj_list_tahunan:
-        total_per_ptj_tahunan = trend_tahunan.groupby('PTJ')['Amount in local currency'].sum().sort_values(ascending=False)
-        default_ptjs_tahunan = total_per_ptj_tahunan.head(5).index.tolist()
-        selected_ptjs_tahunan = st.multiselect("Pilih PTJ untuk trend tahunan:", options=ptj_list_tahunan,
-                                               default=default_ptjs_tahunan, key="line_chart_tahunan")
-        if selected_ptjs_tahunan:
-            trend_filtered_tahunan = trend_tahunan[trend_tahunan['PTJ'].isin(selected_ptjs_tahunan)]
-            fig_line_tahunan = px.line(trend_filtered_tahunan, x='Tahun', y='Amount in local currency', color='PTJ',
-                                       markers=True, labels={"Amount in local currency": "RM"})
-            fig_line_tahunan.update_traces(marker=dict(size=6))
-            fig_line_tahunan.update_layout(xaxis_title="Tahun", yaxis_title="RM", font=dict(size=13), height=450)
-            fig_line_tahunan.update_yaxes(tickformat=",.2f")
-            st.plotly_chart(fig_line_tahunan, use_container_width=True)
-        else:
-            st.info("Pilih sekurang-kurangnya satu PTJ.")
+    ptj_list = trend_tahunan['PTJ'].dropna().unique()
+    if len(ptj_list) > 0:
+        # Limit kepada 10 PTJ teratas untuk kebolehbacaan (atau semua jika kurang)
+        total_per_ptj = trend_tahunan.groupby('PTJ')['Amount in local currency'].sum().sort_values(ascending=False)
+        top_ptj = total_per_ptj.head(10).index.tolist()
+        trend_filtered = trend_tahunan[trend_tahunan['PTJ'].isin(top_ptj)]
+        
+        fig_line = px.line(trend_filtered, x='Tahun', y='Amount in local currency', color='PTJ',
+                           markers=True, labels={"Amount in local currency": "RM"})
+        fig_line.update_traces(marker=dict(size=6))
+        fig_line.update_layout(xaxis_title="Tahun", yaxis_title="RM", font=dict(size=11),
+                               height=350, legend=dict(font=dict(size=9)))
+        fig_line.update_yaxes(tickformat=",.2f")
+        fig_line.update_xaxes(type='category')
+        st.plotly_chart(fig_line, use_container_width=True)
     else:
-        st.info("Tiada data PTJ.")
+        st.info("Tiada data PTJ untuk trend.")
