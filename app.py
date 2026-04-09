@@ -5,75 +5,66 @@ from pathlib import Path
 
 st.set_page_config(page_title="Penggunaan Petrol & Diesel CIDB", layout="wide", page_icon="⛽")
 
-# CSS (sama seperti sebelumnya)
+# CSS dengan saiz font normal
 st.markdown("""
     <style>
     .stApp { background-color: #f5f7fb; }
-    h1 { font-size: 64px !important; color: #0a2b5e; text-align: center !important; }
-    h2 { font-size: 48px !important; color: #1e466e; border-left: 5px solid #f4a261; padding-left: 20px; }
+    h1 { font-size: 28px !important; color: #0a2b5e; text-align: center !important; }
+    h2 { font-size: 22px !important; color: #1e466e; border-left: 4px solid #f4a261; padding-left: 15px; }
     
     /* Sidebar */
     [data-testid="stSidebar"] {
         background: linear-gradient(145deg, #0f2b4d, #1b3a6b);
-        min-width: 380px !important;
-        width: 380px !important;
-        padding: 25px;
+        min-width: 260px !important;
+        width: 260px !important;
+        padding: 15px;
     }
-    [data-testid="stSidebar"] * { color: white !important; font-size: 24px !important; }
+    [data-testid="stSidebar"] * { color: white !important; font-size: 14px !important; }
     .filter-title {
-        font-size: 32px !important;
+        font-size: 18px !important;
         font-weight: bold;
-        margin: 20px 0 15px 0;
+        margin: 15px 0 10px 0;
         color: #ffd966 !important;
     }
     [data-testid="stSidebar"] label {
-        font-size: 26px !important;
+        font-size: 14px !important;
         font-weight: 500 !important;
-        margin-top: 10px !important;
+        margin-top: 8px !important;
     }
     div[data-baseweb="select"] > div {
         background-color: #1e3a5f !important;
-        border: 2px solid rgba(255,255,255,0.5) !important;
-        border-radius: 16px !important;
-        min-height: 55px !important;
+        border: 1px solid rgba(255,255,255,0.5) !important;
+        border-radius: 10px !important;
+        min-height: 38px !important;
     }
-    div[data-baseweb="select"] * { color: white !important; font-size: 22px !important; }
-    div[data-baseweb="select"] ul { background-color: #1e3a5f !important; font-size: 20px !important; }
-    div[data-baseweb="select"] ul li { font-size: 20px !important; padding: 12px !important; }
-    div[data-baseweb="select"] ul li:hover { background-color: #2c5282 !important; }
-    div[data-baseweb="select"] span[data-baseweb="tag"] {
-        font-size: 18px !important;
-        background-color: #2c5282 !important;
-    }
+    div[data-baseweb="select"] * { color: white !important; font-size: 13px !important; }
+    div[data-baseweb="select"] ul { background-color: #1e3a5f !important; font-size: 13px !important; }
+    div[data-baseweb="select"] ul li { font-size: 13px !important; padding: 6px !important; }
     
     /* KPI */
     div[data-testid="stMetricLabel"] {
-        font-size: 50px !important;
-        font-weight: 700 !important;
-        margin-bottom: 15px !important;
-        white-space: nowrap !important;
-        line-height: 1.3 !important;
+        font-size: 15px !important;
+        font-weight: 600 !important;
+        margin-bottom: 5px !important;
     }
     div[data-testid="stMetricValue"] {
-        font-size: 70px !important;
-        font-weight: 800 !important;
+        font-size: 26px !important;
+        font-weight: 700 !important;
         color: #0a2b5e !important;
-        line-height: 1.2 !important;
     }
     div[data-testid="stMetric"] {
         background: white;
-        border-radius: 20px;
-        border-left: 6px solid #f4a261;
-        padding: 30px 20px;
-        min-width: 280px;
+        border-radius: 12px;
+        border-left: 4px solid #f4a261;
+        padding: 12px 15px;
     }
     
-    .stDataFrame { font-size: 18px !important; }
-    .stDataFrame table { font-size: 18px !important; }
-    .stDataFrame th { font-size: 20px !important; background-color: #e6f0fa !important; }
-    .stDataFrame td { font-size: 18px !important; }
-    .stSubheader { font-size: 36px !important; font-weight: bold; }
-    .stMarkdown p { font-size: 18px !important; }
+    .stDataFrame { font-size: 13px !important; }
+    .stDataFrame table { font-size: 13px !important; }
+    .stDataFrame th { font-size: 14px !important; background-color: #e6f0fa !important; }
+    .stDataFrame td { font-size: 13px !important; }
+    .stSubheader { font-size: 20px !important; font-weight: bold; }
+    .stMarkdown p { font-size: 14px !important; }
     </style>
 """, unsafe_allow_html=True)
 
@@ -89,14 +80,10 @@ st.markdown("<h1 style='text-align: center;'>⛽ Penggunaan Petrol & Diesel (CID
 DATA_FOLDER = Path("data")
 @st.cache_data
 def load_data():
-    # DEBUG: Tunjuk status folder dan fail
-    st.write(f"Folder data exists: {DATA_FOLDER.exists()}")
-    st.write(f"Files in data: {list(DATA_FOLDER.glob('*.xls*'))}")
-    
     if not DATA_FOLDER.exists():
         st.error("Folder 'data' tidak dijumpai")
         st.stop()
-    files = list(DATA_FOLDER.glob("*.xls*"))
+    files = list(DATA_FOLDER.glob("*.[xX][lL][sS]*"))  # terima .xlsx, .XLSX, .xls
     if not files:
         st.warning("Tiada fail Excel")
         return pd.DataFrame()
@@ -175,7 +162,7 @@ if selected_quarter:
 if selected_jenis:
     df_filter = df_filter[df_filter['Jenis'].isin(selected_jenis)]
 
-# KPI dengan 2 titik perpuluhan
+# KPI
 petrol = df_filter[df_filter['Jenis']=="Petrol"]['Amount in local currency'].sum()
 diesel = df_filter[df_filter['Jenis']=="Diesel"]['Amount in local currency'].sum()
 jumlah = petrol + diesel
@@ -192,60 +179,49 @@ with colA:
     pie_data = df_filter.groupby('Jenis')['Amount in local currency'].sum().reset_index()
     if not pie_data.empty:
         fig = px.pie(pie_data, names='Jenis', values='Amount in local currency', hole=0.35, color='Jenis', color_discrete_map={"Petrol":"#2c7da0","Diesel":"#d98c2b"})
-        fig.update_traces(textinfo='percent+label', textfont_size=24)
-        fig.update_layout(showlegend=False, margin=dict(t=10,b=10), font=dict(size=20))
+        fig.update_traces(textinfo='percent+label', textfont_size=14)
+        fig.update_layout(showlegend=False, margin=dict(t=10,b=10), font=dict(size=14))
         st.plotly_chart(fig, use_container_width=True)
 with colB:
     monthly = df_filter.groupby(['Bulan','Jenis'])['Amount in local currency'].sum().reset_index()
     if not monthly.empty:
         fig = px.bar(monthly, x='Bulan', y='Amount in local currency', color='Jenis', barmode='group', color_discrete_map={"Petrol":"#2c7da0","Diesel":"#d98c2b"}, category_orders={"Bulan":bulan_order})
-        fig.update_layout(xaxis_title="Bulan", yaxis_title="RM", plot_bgcolor='rgba(0,0,0,0)', font=dict(size=18), xaxis_title_font=dict(size=22), yaxis_title_font=dict(size=22), legend=dict(font=dict(size=18)))
-        fig.update_yaxes(tickformat=",.2f", tickfont=dict(size=16))
-        fig.update_xaxes(tickfont=dict(size=16))
+        fig.update_layout(xaxis_title="Bulan", yaxis_title="RM", plot_bgcolor='rgba(0,0,0,0)', font=dict(size=14))
+        fig.update_yaxes(tickformat=",.2f")
         st.plotly_chart(fig, use_container_width=True)
 
-# =========================================================
-# ANALISA TAMBAHAN: Chart by Tahun (Bar chart Jumlah Tahunan)
-# =========================================================
+# Chart tahunan
 st.subheader("📅 Analisa Penggunaan Mengikut Tahun")
 yearly = df_filter.groupby(['Tahun', 'Jenis'])['Amount in local currency'].sum().reset_index()
 if not yearly.empty:
     fig_year = px.bar(yearly, x='Tahun', y='Amount in local currency', color='Jenis', barmode='group',
                       color_discrete_map={"Petrol":"#2c7da0","Diesel":"#d98c2b"},
                       text=yearly['Amount in local currency'].apply(lambda x: f'RM {x:,.2f}'))
-    fig_year.update_traces(textposition='outside', textfont=dict(size=14))
-    fig_year.update_layout(xaxis_title="Tahun", yaxis_title="RM", plot_bgcolor='rgba(0,0,0,0)',
-                           font=dict(size=18), xaxis_title_font=dict(size=22), yaxis_title_font=dict(size=22),
-                           legend=dict(font=dict(size=18)), height=500)
-    fig_year.update_yaxes(tickformat=",.2f", tickfont=dict(size=16))
-    fig_year.update_xaxes(tickfont=dict(size=16), type='category')
+    fig_year.update_traces(textposition='outside', textfont=dict(size=11))
+    fig_year.update_layout(xaxis_title="Tahun", yaxis_title="RM", plot_bgcolor='rgba(0,0,0,0)', font=dict(size=14), height=450)
+    fig_year.update_yaxes(tickformat=",.2f")
     st.plotly_chart(fig_year, use_container_width=True)
 else:
     st.info("Tiada data tahunan untuk dipaparkan.")
 
-# =========================================================
-# DUA CHART SEBARIS: Top 15 PTJ dan PTJ vs Tahun (Trend Tahunan)
-# =========================================================
+# Dua chart: Top 15 PTJ dan trend PTJ
 st.subheader("🏢 Penggunaan Mengikut PTJ (Top 15) & 📈 Trend PTJ vs Tahun")
 
 col1, col2 = st.columns(2)
 
 with col1:
-    # Top 15 PTJ (horizontal bar chart)
     ptj_sum = df_filter.groupby('PTJ')['Amount in local currency'].sum().reset_index().sort_values('Amount in local currency', ascending=True).tail(15)
     if not ptj_sum.empty:
         fig_bar = px.bar(ptj_sum, y='PTJ', x='Amount in local currency', orientation='h', text='Amount in local currency',
                          color='Amount in local currency', color_continuous_scale='Blues')
-        fig_bar.update_traces(texttemplate='RM %{x:,.2f}', textposition='outside', textfont=dict(size=14))
-        fig_bar.update_layout(xaxis_title="RM", yaxis_title="", coloraxis_showscale=False, height=500,
-                              font=dict(size=16), xaxis_title_font=dict(size=20), yaxis_tickfont=dict(size=16))
-        fig_bar.update_xaxes(tickformat=",.2f", tickfont=dict(size=14))
+        fig_bar.update_traces(texttemplate='RM %{x:,.2f}', textposition='outside', textfont=dict(size=11))
+        fig_bar.update_layout(xaxis_title="RM", yaxis_title="", coloraxis_showscale=False, height=450, font=dict(size=13))
+        fig_bar.update_xaxes(tickformat=",.2f")
         st.plotly_chart(fig_bar, use_container_width=True)
     else:
         st.info("Tiada data PTJ.")
 
 with col2:
-    # Line chart PTJ vs Tahun (trend tahunan setiap PTJ)
     trend_tahunan = df_filter.groupby(['PTJ', 'Tahun'])['Amount in local currency'].sum().reset_index()
     ptj_list_tahunan = sorted(trend_tahunan['PTJ'].dropna().unique())
     if ptj_list_tahunan:
@@ -257,12 +233,9 @@ with col2:
             trend_filtered_tahunan = trend_tahunan[trend_tahunan['PTJ'].isin(selected_ptjs_tahunan)]
             fig_line_tahunan = px.line(trend_filtered_tahunan, x='Tahun', y='Amount in local currency', color='PTJ',
                                        markers=True, labels={"Amount in local currency": "RM"})
-            fig_line_tahunan.update_traces(marker=dict(size=8))
-            fig_line_tahunan.update_layout(xaxis_title="Tahun", yaxis_title="RM", font=dict(size=16),
-                                           xaxis_title_font=dict(size=20), yaxis_title_font=dict(size=20),
-                                           legend=dict(font=dict(size=14)), height=500)
+            fig_line_tahunan.update_traces(marker=dict(size=6))
+            fig_line_tahunan.update_layout(xaxis_title="Tahun", yaxis_title="RM", font=dict(size=13), height=450)
             fig_line_tahunan.update_yaxes(tickformat=",.2f")
-            fig_line_tahunan.update_xaxes(type='category')
             st.plotly_chart(fig_line_tahunan, use_container_width=True)
         else:
             st.info("Pilih sekurang-kurangnya satu PTJ.")
