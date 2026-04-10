@@ -278,6 +278,7 @@ else:
     st.info("Tiada data PTJ untuk trend.")
     import numpy as np
 
+import numpy as np
 st.subheader("🤖 AI Forecast (Trend + Seasonal)")
 
 # =========================
